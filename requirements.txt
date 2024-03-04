@@ -1,0 +1,16 @@
+accelerate==0.26.1
+googletrans==4.0.0rc1
+huggingface-hub==0.20.3
+requests==2.31.0
+threaded==4.2.0
+tokenizers==0.15.1
+torch==2.1.2
+tqdm==4.66.1
+transformers==4.37.1
+faiss-cpu==1.7.4
+langchain==0.0.248
+openai==0.27.7
+streamlit==1.25.0
+pypdfium2==4.18.0
+tiktoken==0.4.0
+sentence_transformers
