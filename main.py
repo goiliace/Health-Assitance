@@ -7,7 +7,7 @@ from typing import Union
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import sqlite3
-from chatbot import Chatbot
+from chatbot.chatbot import Chatbot
 import os
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
@@ -168,17 +168,36 @@ def create_user(user: UserCreate):
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
-bot = Chatbot()
-from translatevien import translate_en2vi
+
+llm = Chatbot()
 from fastapi.responses import StreamingResponse
+from typing import AsyncGenerator
+from py_trans import Async_PyTranslator
+
+tr = Async_PyTranslator()
+
+async def generator(query: str, session_id: str, internet_search:bool) -> AsyncGenerator[str, None]:
+    content = ""
+    query = await tr.translate_dict(query, "en")
+    print(query)
+    for chunk in llm.stream(query['translation'], session_id, internet_search=internet_search):
+        content += chunk
+        if "\n" in chunk:
+            res =  await tr.translate_dict(content, "vi")
+            yield res['translation']+'\n'
+            content = ""
+    if content != "":
+        res =  await tr.translate_dict(content, "vi")
+        yield res['translation']+'\n'
 
 @app.get("/chat/")
-async def read_chat(query: BotQuery, current_user: User = Depends(get_current_active_user)):
-    respone = translate_en2vi(bot.get_response(query.query_text, user_messages_history=""))
-    return BotResponse(response=respone)
+async def chat(query: str,internet_search: bool, current_user: User = Depends(get_current_active_user), session_id: str = ""):
+    if session_id == "":
+        session_id = current_user.username
+    return StreamingResponse(generator(query, session_id, internet_search))
     
 
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="10.0.0.6", port=8055)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="localhost", port=8055)
