@@ -200,4 +200,4 @@ async def chat(query: str,internet_search: bool, current_user: User = Depends(ge
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="localhost", port=8055)
+    uvicorn.run(app, host="0.0.0.0", port=8055)
